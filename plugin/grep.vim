@@ -453,13 +453,15 @@ function! s:RunGrepCmd(cmd, pattern, action)
 
     exe "redir! > " . tmpfile
     silent echon '[Search results for pattern: ' . a:pattern . "]\n"
+    silent echon 'Entering dir ''' . getcwd() . "'\n"
     silent echon cmd_output
+    silent echon 'Leaving dir ''' . getcwd() .''''
     redir END
 
     let &verbose = old_verbose
 
     let old_efm = &efm
-    set efm=%f:%\\s%#%l:%m
+    set efm=%f:%\\s%#%l:%m,%DEntering\ dir\ '%f',%XLeaving\ dir\ '%f'
 
     if v:version >= 700 && a:action == 'add'
         execute "silent! caddfile " . tmpfile
@@ -477,6 +479,12 @@ function! s:RunGrepCmd(cmd, pattern, action)
     if g:Grep_OpenQuickfixWindow == 1
         " Open the quickfix window below the current window
         botright copen
+    endif
+
+    if exists('g:Grep_Auto_Save_Results') && g:Grep_Auto_Save_Results == 'ON'
+        if exists('g:Grep_Auto_Save_Results_Func')
+            call g:Grep_Auto_Save_Results_Func()
+        endif
     endif
 
     call delete(tmpfile)
